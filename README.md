@@ -1,31 +1,56 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# BiblioAndes
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Aplicación móvil multiplataforma (Kotlin Multiplatform + Compose Multiplatform) para consultar el catálogo de la
+biblioteca, solicitar préstamos y controlar fechas de devolución. Corre en **Android** e **iOS** desde el módulo
+compartido `shared/commonMain`. Autor: Fabian Rodriguez (examen parcial Unidad 1, modalidad individual).
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Los datos son simulados **en memoria** (sin red ni persistencia en disco). El backend llegará en la Unidad 2.
 
-### Running the apps
+## Arquitectura: Clean Architecture + MVVM
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+```
+shared/src/commonMain/kotlin/pe/upeu/biblioandes/
+├── domain/          Reglas y contratos; no depende de data ni de presentation
+│   ├── model/       Libro, Prestamo, EstadoPrestamo (sealed class), Estudiante
+│   ├── repository/  BibliotecaRepository (interfaz)
+│   └── usecase/     Casos de uso; aquí viven las reglas RN-01 a RN-04
+├── data/
+│   ├── local/       DatosSimulados (12 libros, 5 préstamos), RelojSistema
+│   └── repository/  BibliotecaRepositoryFake (delay de 800 ms, bandera shouldSimulateError)
+├── presentation/    Compose + ViewModels con StateFlow<UiState> de solo lectura
+│   ├── inicio/ catalogo/ detalle/ prestamos/ perfil/
+│   ├── navigation/  AppNavHost (aplica el tema en la raíz) y Destinos
+│   ├── components/  Estados de carga, vacío y error; barra superior
+│   └── theme/       Color, Type, BiblioAndesTheme (claro/oscuro)
+└── di/              AppModule (Koin)
+```
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+Flujo de datos: `DatosSimulados` → `BibliotecaRepositoryFake` → casos de uso → `ViewModel` (`UiState`) → `Screen`.
 
-### Running tests
+### Migración a la API real (Unidad 2)
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+Solo cambia la capa `data`: crear `data/remote/` (servicio + DTOs), `BibliotecaRepositoryImpl` y sustituir la
+línea `single<BibliotecaRepository>` en `di/AppModule.kt`. `domain` y `presentation` no se modifican.
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+### Reglas de negocio (en `domain/usecase/`)
 
----
+- **RN-01** máximo 3 préstamos activos · **RN-02** no se presta un libro sin ejemplares ·
+  **RN-03** préstamo de 7 días; vencido si la fecha límite ya pasó · **RN-04** con un préstamo vencido no se solicita nada.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Nota: los datos de ejemplo incluyen un préstamo vencido, por lo que RN-04 rechaza toda solicitud nueva hasta que
+ese dato cambie.
+
+### Error simulado (solo Catálogo)
+
+Poner `shouldSimulateError = true` en `BibliotecaRepositoryFake` para ver el estado de error con botón *Reintentar*.
+
+## Ejecución
+
+- Android: `./gradlew :androidApp:assembleDebug` (o ejecutar el módulo `androidApp` desde Android Studio).
+- iOS: abrir [iosApp](./iosApp) en Xcode (macOS) y ejecutar en un simulador.
+- Pruebas: `./gradlew :shared:testAndroidHostTest`
+
+## Git
+
+Ramas: `main` (estable), `develop` (integración), `feature/*-rodriguez`, `sc-<letra>-rodriguez`.
+Commits convencionales (`feat`, `fix`, `refactor`, `style`, `docs`).
