@@ -34,7 +34,7 @@ fun DetalleLibroScreen(viewModel: DetalleLibroViewModel, onAtras: () -> Unit) {
         when {
             estado.cargando && libro == null -> PantallaCargando()
             libro == null -> PantallaError(estado.error ?: "Error", viewModel::cargar)
-            else -> FichaLibro(libro, estado.procesando, viewModel::onSolicitarClick)
+            else -> FichaLibro(libro, estado.procesando, estado.limiteAlcanzado, viewModel::onSolicitarClick)
         }
     }
 
@@ -58,7 +58,7 @@ fun DetalleLibroScreen(viewModel: DetalleLibroViewModel, onAtras: () -> Unit) {
 }
 
 @Composable
-private fun FichaLibro(libro: Libro, procesando: Boolean, onSolicitar: () -> Unit) {
+private fun FichaLibro(libro: Libro, procesando: Boolean, limiteAlcanzado: Boolean, onSolicitar: () -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -73,8 +73,15 @@ private fun FichaLibro(libro: Libro, procesando: Boolean, onSolicitar: () -> Uni
                 Dato("Ejemplares disponibles", libro.ejemplaresDisponibles.toString())
             }
         }
-        Button(onClick = onSolicitar, enabled = !procesando, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = onSolicitar, enabled = !procesando && !limiteAlcanzado, modifier = Modifier.fillMaxWidth()) {
             Text(if (procesando) "Procesando..." else "Solicitar préstamo")
+        }
+        if (limiteAlcanzado) {
+            Text(
+                "Alcanzaste el límite de préstamos activos.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }

@@ -34,6 +34,9 @@ class PrestamosViewModel(private val obtenerPrestamos: ObtenerPrestamosUseCase) 
     private val _uiState = MutableStateFlow<PrestamosUiState>(PrestamosUiState.Loading)
     val uiState: StateFlow<PrestamosUiState> = _uiState.asStateFlow()
 
+    private val _prestamosActivos = MutableStateFlow(0)
+    val prestamosActivos: StateFlow<Int> = _prestamosActivos.asStateFlow()
+
     private var prestamos: List<Prestamo> = emptyList()
     private var filtro: FiltroEstado? = null
 
@@ -45,6 +48,17 @@ class PrestamosViewModel(private val obtenerPrestamos: ObtenerPrestamosUseCase) 
                 publicar()
             } catch (e: Exception) {
                 _uiState.value = PrestamosUiState.Error(e.message ?: "No se pudieron cargar los préstamos")
+            }
+        }
+    }
+
+    /** Actualiza solo el contador del badge, sin pasar por el estado de carga. */
+    fun actualizarActivos() {
+        viewModelScope.launch {
+            try {
+                _prestamosActivos.value = obtenerPrestamos.contarActivos()
+            } catch (e: Exception) {
+                // Si falla, se conserva el último valor conocido.
             }
         }
     }

@@ -18,6 +18,7 @@ data class DetalleUiState(
     val error: String? = null,
     val confirmando: Boolean = false,
     val procesando: Boolean = false,
+    val limiteAlcanzado: Boolean = false,
     val mensaje: String? = null
 )
 
@@ -39,10 +40,12 @@ class DetalleLibroViewModel(
         viewModelScope.launch {
             try {
                 val libro = obtenerLibro(libroId)
+                val limite = solicitarPrestamo.limiteAlcanzado()
                 _uiState.update {
                     it.copy(
                         cargando = false,
                         libro = libro,
+                        limiteAlcanzado = limite,
                         error = if (libro == null) "No se encontró el libro." else null
                     )
                 }
@@ -64,7 +67,10 @@ class DetalleLibroViewModel(
                 is ResultadoSolicitud.Rechazada -> r.motivo.mensaje
             }
             val libro = try { obtenerLibro(libroId) } catch (e: Exception) { _uiState.value.libro }
-            _uiState.update { it.copy(procesando = false, libro = libro, mensaje = mensaje) }
+            val limite = try { solicitarPrestamo.limiteAlcanzado() } catch (e: Exception) { _uiState.value.limiteAlcanzado }
+            _uiState.update {
+                it.copy(procesando = false, libro = libro, limiteAlcanzado = limite, mensaje = mensaje)
+            }
         }
     }
 
