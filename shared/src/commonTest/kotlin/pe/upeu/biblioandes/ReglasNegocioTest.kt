@@ -8,6 +8,7 @@ import kotlinx.datetime.LocalDate
 import pe.upeu.biblioandes.data.local.DatosSimulados
 import pe.upeu.biblioandes.data.repository.BibliotecaRepositoryFake
 import pe.upeu.biblioandes.domain.model.EstadoPrestamo
+import pe.upeu.biblioandes.domain.model.OrdenCatalogo
 import pe.upeu.biblioandes.domain.model.Prestamo
 import pe.upeu.biblioandes.domain.repository.BibliotecaRepository
 import pe.upeu.biblioandes.domain.usecase.MotivoRechazo
@@ -97,6 +98,42 @@ class ReglasNegocioTest {
     fun prestamoVencidoNoCuentaComoActivo() = runTest {
         val conVencido = listOf(activo, prestamos[1], prestamos[4])
         assertEquals(2 to false, activosYLimite(conVencido))
+    }
+
+    @Test
+    fun ordenPorTituloEsAscendenteYNoDistingueTildes() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val ids = caso.filtrar(DatosSimulados.libros, "", null, orden = OrdenCatalogo.TITULO).map { it.id }
+        // "Álgebra" (8) va primero pese a la tilde; "Cien" (11) precede a "Clean" (7).
+        assertEquals(listOf(8, 3, 11, 7, 12, 2, 6, 1, 10, 4, 5, 9), ids)
+    }
+
+    @Test
+    fun ordenPorAnioEsDescendenteYDesempataPorTitulo() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val ids = caso.filtrar(DatosSimulados.libros, "", null, orden = OrdenCatalogo.ANIO).map { it.id }
+        assertEquals(listOf(5, 1, 10, 7, 4, 2, 6, 9, 8, 3, 11, 12), ids)
+    }
+
+    @Test
+    fun ordenConservaCategoriaSeleccionada() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val libros = DatosSimulados.libros
+        assertEquals(listOf(7, 2, 1), caso.filtrar(libros, "", "Programación", orden = OrdenCatalogo.TITULO).map { it.id })
+        assertEquals(listOf(1, 7, 2), caso.filtrar(libros, "", "Programación", orden = OrdenCatalogo.ANIO).map { it.id })
+    }
+
+    @Test
+    fun ordenSeCombinaConBusquedaYSoloDisponibles() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val libros = DatosSimulados.libros
+        assertEquals(listOf(4, 5), caso.filtrar(libros, "redes", null, orden = OrdenCatalogo.TITULO).map { it.id })
+        assertEquals(listOf(5, 4), caso.filtrar(libros, "redes", null, orden = OrdenCatalogo.ANIO).map { it.id })
+        // Con "Solo disponibles" desaparece el agotado (5) y el orden se mantiene.
+        assertEquals(
+            listOf(4, 9),
+            caso.filtrar(libros, "", "Redes", soloDisponibles = true, orden = OrdenCatalogo.ANIO).map { it.id }
+        )
     }
 
     @Test
