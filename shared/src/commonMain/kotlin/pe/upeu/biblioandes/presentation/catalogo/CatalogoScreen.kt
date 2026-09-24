@@ -40,11 +40,11 @@ fun CatalogoScreen(viewModel: CatalogoViewModel, onLibroClick: (Int) -> Unit) {
             CatalogoUiState.Loading -> PantallaCargando()
             is CatalogoUiState.Error -> PantallaError(s.mensaje, viewModel::cargar)
             is CatalogoUiState.Empty -> {
-                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick)
+                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick, viewModel::onSoloDisponiblesClick)
                 PantallaVacia("No se encontraron libros con esos filtros.")
             }
             is CatalogoUiState.Success -> {
-                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick)
+                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick, viewModel::onSoloDisponiblesClick)
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -62,7 +62,8 @@ fun CatalogoScreen(viewModel: CatalogoViewModel, onLibroClick: (Int) -> Unit) {
 private fun Filtros(
     filtros: FiltrosCatalogo,
     onBusquedaChange: (String) -> Unit,
-    onCategoriaClick: (String) -> Unit
+    onCategoriaClick: (String) -> Unit,
+    onSoloDisponiblesClick: () -> Unit
 ) {
     OutlinedTextField(
         value = filtros.busqueda,
@@ -83,6 +84,13 @@ private fun Filtros(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        item {
+            FilterChip(
+                selected = filtros.soloDisponibles,
+                onClick = onSoloDisponiblesClick,
+                label = { Text("Solo disponibles") }
+            )
+        }
         items(filtros.categorias) { categoria ->
             FilterChip(
                 selected = categoria == filtros.categoriaSeleccionada,

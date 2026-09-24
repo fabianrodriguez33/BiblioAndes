@@ -43,8 +43,18 @@ class CatalogoViewModel(private val obtenerCatalogo: ObtenerCatalogoUseCase) : V
         publicar()
     }
 
+    fun onSoloDisponiblesClick() {
+        filtros = filtros.copy(soloDisponibles = !filtros.soloDisponibles)
+        publicar()
+    }
+
     private fun publicar() {
-        val resultado = obtenerCatalogo.filtrar(libros, filtros.busqueda, filtros.categoriaSeleccionada)
+        val resultado = obtenerCatalogo.filtrar(
+            libros,
+            filtros.busqueda,
+            filtros.categoriaSeleccionada,
+            filtros.soloDisponibles
+        )
         _uiState.value =
             if (resultado.isEmpty()) CatalogoUiState.Empty(filtros)
             else CatalogoUiState.Success(resultado, filtros)
