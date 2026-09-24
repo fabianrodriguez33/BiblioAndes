@@ -40,11 +40,21 @@ fun CatalogoScreen(viewModel: CatalogoViewModel, onLibroClick: (Int) -> Unit) {
             CatalogoUiState.Loading -> PantallaCargando()
             is CatalogoUiState.Error -> PantallaError(s.mensaje, viewModel::cargar)
             is CatalogoUiState.Empty -> {
-                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick, viewModel::onSoloDisponiblesClick)
+                Filtros(
+                    filtros = s.filtros,
+                    onBusquedaChange = viewModel::onBusquedaChange,
+                    onCategoriaClick = viewModel::onCategoriaClick,
+                    onSoloDisponiblesClick = viewModel::onSoloDisponiblesClick
+                )
                 PantallaVacia("No se encontraron libros con esos filtros.")
             }
             is CatalogoUiState.Success -> {
-                Filtros(s.filtros, viewModel::onBusquedaChange, viewModel::onCategoriaClick, viewModel::onSoloDisponiblesClick)
+                Filtros(
+                    filtros = s.filtros,
+                    onBusquedaChange = viewModel::onBusquedaChange,
+                    onCategoriaClick = viewModel::onCategoriaClick,
+                    onSoloDisponiblesClick = viewModel::onSoloDisponiblesClick
+                )
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
