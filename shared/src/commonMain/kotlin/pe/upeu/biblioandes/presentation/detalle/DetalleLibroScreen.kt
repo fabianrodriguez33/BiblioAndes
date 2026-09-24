@@ -65,6 +65,7 @@ private fun FichaLibro(libro: Libro, procesando: Boolean, limiteAlcanzado: Boole
     ) {
         Text(libro.titulo, style = MaterialTheme.typography.headlineMedium)
         Text(libro.autor, style = MaterialTheme.typography.titleMedium)
+        Text(libro.editorial, style = MaterialTheme.typography.bodyMedium)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Dato("Año", libro.anio.toString())
