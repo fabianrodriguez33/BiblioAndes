@@ -27,4 +27,7 @@ class ObtenerPrestamosUseCase(
             .map { it.conEstadoEvaluado(hoy) }
             .sortedBy { it.fechaLimite }
     }
+
+    /** Cantidad de préstamos en estado Activo, con RN-03 ya aplicada. */
+    suspend fun contarActivos(): Int = invoke().count { it.estado is EstadoPrestamo.Activo }
 }

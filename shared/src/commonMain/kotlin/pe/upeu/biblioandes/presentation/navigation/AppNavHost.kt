@@ -5,12 +5,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,6 +37,7 @@ import pe.upeu.biblioandes.presentation.inicio.InicioScreen
 import pe.upeu.biblioandes.presentation.perfil.PerfilScreen
 import pe.upeu.biblioandes.presentation.perfil.PerfilViewModel
 import pe.upeu.biblioandes.presentation.prestamos.PrestamosScreen
+import pe.upeu.biblioandes.presentation.prestamos.PrestamosViewModel
 import pe.upeu.biblioandes.presentation.theme.BiblioAndesTheme
 
 private data class ItemNavegacion(val destino: Destino, val etiqueta: String, val icono: ImageVector)
@@ -48,12 +52,18 @@ private val itemsNavegacion = listOf(
 fun AppNavHost() {
     val perfilViewModel = koinViewModel<PerfilViewModel>()
     val temaOscuro by perfilViewModel.temaOscuro.collectAsState()
+    // Se crea en la raíz para que el badge de la barra inferior sea visible desde cualquier pestaña.
+    val prestamosViewModel = koinViewModel<PrestamosViewModel>()
+    val prestamosActivos by prestamosViewModel.prestamosActivos.collectAsState()
 
     // El tema se aplica en la raíz del árbol para que el Switch afecte a toda la app.
     BiblioAndesTheme(temaOscuro) {
         val navController = rememberNavController()
         val entradaActual by navController.currentBackStackEntryAsState()
         val destinoActual = entradaActual?.destination
+
+        // Refresca el contador al cambiar de pantalla (p. ej. tras solicitar un préstamo).
+        LaunchedEffect(destinoActual?.route) { prestamosViewModel.actualizarActivos() }
 
         Scaffold(
             bottomBar = {
@@ -63,7 +73,15 @@ fun AppNavHost() {
                             NavigationBarItem(
                                 selected = destinoActual?.hierarchy?.any { it.route == item.destino.ruta } == true,
                                 onClick = { navController.navegarAPrincipal(item.destino) },
-                                icon = { Icon(item.icono, contentDescription = item.etiqueta) },
+                                icon = {
+                                    if (item.destino == Destino.Prestamos && prestamosActivos > 0) {
+                                        BadgedBox(badge = { Badge { Text(prestamosActivos.toString()) } }) {
+                                            Icon(item.icono, contentDescription = item.etiqueta)
+                                        }
+                                    } else {
+                                        Icon(item.icono, contentDescription = item.etiqueta)
+                                    }
+                                },
                                 label = { Text(item.etiqueta) }
                             )
                         }
@@ -86,7 +104,7 @@ fun AppNavHost() {
                         onLibroClick = { navController.navigate(Destino.Detalle.crearRuta(it)) }
                     )
                 }
-                composable(Destino.Prestamos.ruta) { PrestamosScreen(viewModel = koinViewModel()) }
+                composable(Destino.Prestamos.ruta) { PrestamosScreen(prestamosViewModel) }
                 composable(Destino.Perfil.ruta) {
                     PerfilScreen(perfilViewModel, onAtras = { navController.popBackStack() })
                 }
