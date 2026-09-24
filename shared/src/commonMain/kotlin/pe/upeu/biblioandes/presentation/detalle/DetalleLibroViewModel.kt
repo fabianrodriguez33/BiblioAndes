@@ -67,7 +67,11 @@ class DetalleLibroViewModel(
                 is ResultadoSolicitud.Rechazada -> r.motivo.mensaje
             }
             val libro = try { obtenerLibro(libroId) } catch (e: Exception) { _uiState.value.libro }
-            val limite = try { solicitarPrestamo.limiteAlcanzado() } catch (e: Exception) { _uiState.value.limiteAlcanzado }
+            val limite = try {
+                solicitarPrestamo.limiteAlcanzado()
+            } catch (e: Exception) {
+                _uiState.value.limiteAlcanzado
+            }
             _uiState.update {
                 it.copy(procesando = false, libro = libro, limiteAlcanzado = limite, mensaje = mensaje)
             }

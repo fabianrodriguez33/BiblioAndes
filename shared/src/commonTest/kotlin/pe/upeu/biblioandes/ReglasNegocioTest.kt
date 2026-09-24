@@ -72,6 +72,33 @@ class ReglasNegocioTest {
         assertEquals("2026-09-30", r.prestamo.fechaLimite)
     }
 
+    private suspend fun activosYLimite(lista: List<Prestamo>): Pair<Int, Boolean> {
+        val repoPrueba = RepoDePrueba(lista)
+        return ObtenerPrestamosUseCase(repoPrueba, reloj).contarActivos() to
+            SolicitarPrestamoUseCase(repoPrueba, reloj).limiteAlcanzado()
+    }
+
+    @Test
+    fun rn01SinPrestamosActivosNoAlcanzaElLimite() = runTest {
+        assertEquals(0 to false, activosYLimite(listOf(devuelto)))
+    }
+
+    @Test
+    fun rn01DosActivosNoAlcanzanElLimite() = runTest {
+        assertEquals(2 to false, activosYLimite(listOf(activo, prestamos[1])))
+    }
+
+    @Test
+    fun rn01TresActivosAlcanzanElLimite() = runTest {
+        assertEquals(3 to true, activosYLimite(listOf(activo, prestamos[1], activo.copy(id = 9))))
+    }
+
+    @Test
+    fun prestamoVencidoNoCuentaComoActivo() = runTest {
+        val conVencido = listOf(activo, prestamos[1], prestamos[4])
+        assertEquals(2 to false, activosYLimite(conVencido))
+    }
+
     @Test
     fun busquedaIgnoraTildesYMayusculas() = runTest {
         val caso = ObtenerCatalogoUseCase(repo)
