@@ -79,4 +79,23 @@ class ReglasNegocioTest {
         assertEquals(listOf(3), caso.filtrar(libros, "CALCULO", null).map { it.id })
         assertEquals(listOf(11), caso.filtrar(libros, "garcia marquez", "Literatura").map { it.id })
     }
+
+    @Test
+    fun soloDisponiblesOcultaLibrosSinEjemplares() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val resultado = caso.filtrar(DatosSimulados.libros, "", null, soloDisponibles = true)
+        assertEquals(10, resultado.size)
+        assertEquals(emptyList(), resultado.filter { it.ejemplaresDisponibles == 0 })
+    }
+
+    @Test
+    fun soloDisponiblesSeCombinaConCategoriaYBusqueda() = runTest {
+        val caso = ObtenerCatalogoUseCase(repo)
+        val libros = DatosSimulados.libros
+        // Programación tiene un libro agotado (id 2): con el filtro solo quedan 1 y 7.
+        assertEquals(listOf(1, 2, 7), caso.filtrar(libros, "", "Programación").map { it.id })
+        assertEquals(listOf(1, 7), caso.filtrar(libros, "", "Programación", soloDisponibles = true).map { it.id })
+        // Un libro agotado buscado por nombre no aparece con el filtro activo.
+        assertEquals(emptyList(), caso.filtrar(libros, "estructuras", "Programación", soloDisponibles = true))
+    }
 }
