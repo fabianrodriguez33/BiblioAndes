@@ -1,6 +1,7 @@
 package pe.upeu.biblioandes.domain.usecase
 
 import pe.upeu.biblioandes.domain.model.Libro
+import pe.upeu.biblioandes.domain.model.OrdenCatalogo
 import pe.upeu.biblioandes.domain.repository.BibliotecaRepository
 
 data class Catalogo(val libros: List<Libro>, val categorias: List<String>)
@@ -15,16 +16,26 @@ class ObtenerCatalogoUseCase(private val repositorio: BibliotecaRepository) {
         libros: List<Libro>,
         busqueda: String,
         categoria: String?,
-        soloDisponibles: Boolean = false
+        soloDisponibles: Boolean = false,
+        orden: OrdenCatalogo = OrdenCatalogo.TITULO
     ): List<Libro> {
         val termino = normalizar(busqueda.trim())
-        return libros.filter { libro ->
+        val filtrados = libros.filter { libro ->
             (categoria == null || libro.categoria == categoria) &&
                 (!soloDisponibles || libro.ejemplaresDisponibles > 0) &&
                 (termino.isEmpty() ||
                     normalizar(libro.titulo).contains(termino) ||
                     normalizar(libro.autor).contains(termino))
         }
+        return ordenar(filtrados, orden)
+    }
+
+    /** SC-C: título ascendente (sin tildes) o año descendente; el título desempata. */
+    private fun ordenar(libros: List<Libro>, orden: OrdenCatalogo): List<Libro> = when (orden) {
+        OrdenCatalogo.TITULO -> libros.sortedBy { normalizar(it.titulo) }
+        OrdenCatalogo.ANIO -> libros.sortedWith(
+            compareByDescending<Libro> { it.anio }.thenBy { normalizar(it.titulo) }
+        )
     }
 
     private fun normalizar(texto: String): String = buildString {

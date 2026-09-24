@@ -120,8 +120,9 @@ class ReglasNegocioTest {
         val caso = ObtenerCatalogoUseCase(repo)
         val libros = DatosSimulados.libros
         // Programación tiene un libro agotado (id 2): con el filtro solo quedan 1 y 7.
-        assertEquals(listOf(1, 2, 7), caso.filtrar(libros, "", "Programación").map { it.id })
-        assertEquals(listOf(1, 7), caso.filtrar(libros, "", "Programación", soloDisponibles = true).map { it.id })
+        // El orden por defecto es por título: Clean Architecture (7), Estructuras (2), Kotlin (1).
+        assertEquals(listOf(7, 2, 1), caso.filtrar(libros, "", "Programación").map { it.id })
+        assertEquals(listOf(7, 1), caso.filtrar(libros, "", "Programación", soloDisponibles = true).map { it.id })
         // Un libro agotado buscado por nombre no aparece con el filtro activo.
         assertEquals(emptyList(), caso.filtrar(libros, "estructuras", "Programación", soloDisponibles = true))
     }
