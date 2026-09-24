@@ -1,12 +1,14 @@
 package pe.upeu.biblioandes.presentation.catalogo
 
 import pe.upeu.biblioandes.domain.model.Libro
+import pe.upeu.biblioandes.domain.model.OrdenCatalogo
 
 /** Controles de filtrado visibles mientras hay datos (con resultados o sin ellos). */
 data class FiltrosCatalogo(
     val busqueda: String = "",
     val categoriaSeleccionada: String? = null,
     val soloDisponibles: Boolean = false,
+    val orden: OrdenCatalogo = OrdenCatalogo.TITULO,
     val categorias: List<String> = emptyList()
 )
 
