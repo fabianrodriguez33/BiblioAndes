@@ -34,7 +34,7 @@ class SolicitarPrestamoUseCase(
             return ResultadoSolicitud.Rechazada(MotivoRechazo.MOROSIDAD)
         }
         // RN-01: máximo tres préstamos activos simultáneos.
-        if (prestamos.count { it.estado is EstadoPrestamo.Activo } >= LIMITE_PRESTAMOS_ACTIVOS) {
+        if (superaLimite(prestamos)) {
             return ResultadoSolicitud.Rechazada(MotivoRechazo.LIMITE_ALCANZADO)
         }
         // RN-02: no se puede solicitar un libro sin ejemplares.
@@ -47,6 +47,15 @@ class SolicitarPrestamoUseCase(
             repositorio.registrarPrestamo(libro.id, hoy.toString(), limite.toString())
         )
     }
+
+    /** RN-01 consultable desde la presentación sin duplicar la regla. */
+    suspend fun limiteAlcanzado(): Boolean {
+        val hoy = reloj.hoy()
+        return superaLimite(repositorio.obtenerPrestamos().map { it.conEstadoEvaluado(hoy) })
+    }
+
+    private fun superaLimite(prestamos: List<Prestamo>): Boolean =
+        prestamos.count { it.estado is EstadoPrestamo.Activo } >= LIMITE_PRESTAMOS_ACTIVOS
 
     companion object {
         const val LIMITE_PRESTAMOS_ACTIVOS = 3
