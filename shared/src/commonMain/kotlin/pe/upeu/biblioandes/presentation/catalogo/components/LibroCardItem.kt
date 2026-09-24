@@ -21,6 +21,7 @@ fun LibroCardItem(libro: Libro, onClick: () -> Unit, modifier: Modifier = Modifi
         Column(Modifier.padding(16.dp)) {
             Text(libro.titulo, style = MaterialTheme.typography.titleMedium)
             Text(libro.autor, style = MaterialTheme.typography.bodyMedium)
+            Text(libro.editorial, style = MaterialTheme.typography.bodyMedium)
             Row(Modifier.padding(top = 8.dp)) {
                 val disponible = libro.ejemplaresDisponibles > 0
                 Text(

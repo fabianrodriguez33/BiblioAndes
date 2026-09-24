@@ -137,6 +137,21 @@ class ReglasNegocioTest {
     }
 
     @Test
+    fun todosLosLibrosTienenEditorial() = runTest {
+        val libros = repo.obtenerLibros()
+        assertEquals(12, libros.size)
+        assertEquals(emptyList(), libros.filter { it.editorial.isBlank() })
+    }
+
+    @Test
+    fun elPrestamoConservaLaEditorialDelLibro() = runTest {
+        val nuevo = repo.registrarPrestamo(7, "2026-09-23", "2026-09-30")
+        assertEquals("Pearson", nuevo.libro.editorial)
+        // El ejemplar descontado no altera el resto de los datos del libro.
+        assertEquals("Pearson", repo.obtenerLibro(7)?.editorial)
+    }
+
+    @Test
     fun busquedaIgnoraTildesYMayusculas() = runTest {
         val caso = ObtenerCatalogoUseCase(repo)
         val libros = DatosSimulados.libros
