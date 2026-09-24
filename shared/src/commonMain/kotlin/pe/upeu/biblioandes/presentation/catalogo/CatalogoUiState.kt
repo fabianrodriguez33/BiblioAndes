@@ -6,6 +6,7 @@ import pe.upeu.biblioandes.domain.model.Libro
 data class FiltrosCatalogo(
     val busqueda: String = "",
     val categoriaSeleccionada: String? = null,
+    val soloDisponibles: Boolean = false,
     val categorias: List<String> = emptyList()
 )
 
